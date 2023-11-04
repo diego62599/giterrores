@@ -1,0 +1,131 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card px-6 py-6">
+            <p-toolbar>
+                <ng-template pTemplate="left">
+                    <div class="my-2">
+                        <button pButton pRipple label="Nuevo" icon="pi pi-plus" class="p-button-success mr-2" (click)="openNew()"></button>
+                        <button pButton pRipple label="Eliminar" icon="pi pi-trash" class="p-button-danger" (click)="deleteSelectedServicios()" [disabled]="!selectedProducts || !selectedProducts.length"></button>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="right">
+                    <button pButton pRipple label="Exportar" icon="pi pi-upload" class="p-button-help" (click)="dt.exportCSV()"></button>
+                </ng-template>
+            </p-toolbar>
+            <p-table #dt [columns]="cols" responsiveLayout="scroll" [rows]="10" [globalFilterFields]="['name','country.name','representative.name','status']" [paginator]="true" [rowsPerPageOptions]="[10,20,30]" [showCurrentPageReport]="true" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" selectionMode="multiple" [rowHover]="true" dataKey="id">
+                <ng-template pTemplate="caption">
+                    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                        <h5 class="m-0">Tabla de Paquetes</h5>
+                        <span class="block mt-2 md:mt-0 p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." class="w-full sm:w-auto" />
+                        </span>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 3rem">
+                            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                        </th>
+                        <th pSortableColumn="id">Id <p-sortIcon field="id"></p-sortIcon></th>
+                        <th pSortableColumn="paquetes">Paquetes <p-sortIcon field="paquetes"></p-sortIcon></th>
+                        <th pSortableColumn="servicios">Servicios <p-sortIcon field="servicios"></p-sortIcon></th>
+                        <th pSortableColumn="frecuencia">Frecuencia <p-sortIcon field="frecuencia"></p-sortIcon></th>
+                        <th pSortableColumn="total">Total <p-sortIcon field="total"></p-sortIcon></th>
+                        <th pSortableColumn="precioventa">Precio Venta <p-sortIcon field="precioventa"></p-sortIcon></th>
+                        <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+                        <th></th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-PaqueteArray>
+                    <tr *ngFor="let PaqueteItem of PaqueteArray">
+                        <td>
+                            <p-tableCheckbox [value]="PaqueteArray"></p-tableCheckbox>
+                        </td>
+                        <td style="width:14%; min-width:10rem;"><span class="p-column-title">Id</span>{{PaqueteArray.id}}</td>
+                        <td style="width:14%; min-width:10rem;"><span class="p-column-title">Paquetes</span>{{PaqueteArray.paquete}}</td>
+                        <td style="width:14%; min-width:10rem;"><span class="p-column-title">Servicios</span>{{PaqueteArray.servicios}}</td>
+                        <td style="width:14%; min-width:10rem;"><span class="p-column-title">Frecuencia</span>{{PaqueteArray.frecuencia}}</td>
+                        <td style="width:14%; min-width:8rem;"><span class="p-column-title">Total</span>{{PaqueteArray.total | currency:'$'}}</td>
+                        <td style="width:14%; min-width:8rem;"><span class="p-column-title">Precio Venta</span>{{PaqueteArray.precioventa | currency:'$'}}</td>
+                        <td style="width:14%; min-width: 10rem;"><span class="p-column-title">Estado</span><span [class]="'product-badge status-' + (PaqueteArray.inventoryStatus ? PaqueteArray.inventoryStatus.toLowerCase() : '')">{{PaqueteArray.inventoryStatus}}</span></td>
+                        <td>
+                            <div class="flex">
+                                <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" (click)="editServicio(PaqueteArray)"></button>
+                                <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-warning" (click)="deleteServicio(PaqueteArray)"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+            <p-dialog [(visible)]="paqueteDialog" [style]="{width: '450px'}" header="Detalle de los Paquetes" [modal]="true" class="p-fluid">
+                <ng-template pTemplate="content">
+                    <div class="field">
+                        <label for="paquetes">Paquetes<span style="color: red;">*</span></label>
+                        <input type="text" pInputText id="paquetes" [(ngModel)]="PaqueteArray.paquetes" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !PaqueteArray.paquetes}" />
+                        <small class="ng-dirty ng-invalid" *ngIf="submitted && !PaqueteArray.paquetes">El paquete es requerido.</small>
+                    </div>
+                    <div class="field">
+                        <label for="servicios">Servicios<span style="color: red;">*</span></label>
+                        <input type="text" pInputText id="servicios" [(ngModel)]="PaqueteArray.servicios" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !PaqueteArray.servicios}" />
+                        <small class="ng-dirty ng-invalid" *ngIf="submitted && !PaqueteArray.servicios">Los servicios son requeridos.</small>
+                    </div>
+                    <div class="field">
+                        <label for="inventoryStatus">Estado<span style="color: red;">*</span></label>
+                        <p-dropdown [(ngModel)]="PaqueteArray.inventoryStatus" inputId="inventoryStatus" optionValue="value" [options]="statuses" placeholder="Select">
+                            <ng-template pTemplate="selectedItem">
+                                <span *ngIf="PaqueteArray && PaqueteArray.inventoryStatus" [class]="'product-badge status-' + PaqueteArray.inventoryStatus.toString().toLowerCase()">{{PaqueteArray.inventoryStatus}}</span>
+                            </ng-template>
+                            <ng-template let-option pTemplate="item">
+                                <span [class]="'product-badge status-' + option.value">{{option.label}}</span>
+                            </ng-template>
+                        </p-dropdown>
+                    </div>
+    
+                    <div class="formgrid grid">
+                        <div class="field col">
+                            <label for="total">Total<span style="color: red;">*</span></label>
+                            <p-inputNumber id="total" [(ngModel)]="PaqueteArray.total" mode="currency" currency="COP" locale="es-CO" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !PaqueteArray.total}" ></p-inputNumber>
+                            <small class="ng-dirty ng-invalid" *ngIf="submitted && !PaqueteArray.precio">El total es requerido.</small>
+                        </div>                    
+                        <div class="field col">
+                            <label for="precioventa">Precio Venta<span style="color: red;">*</span></label>
+                            <p-inputNumber id="total" [(ngModel)]="PaqueteArray.precioventa" mode="currency" currency="COP" locale="es-CO" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !PaqueteArray.precioventa}" ></p-inputNumber>
+                            <small class="ng-dirty ng-invalid" *ngIf="submitted && !PaqueteArray.precioventa">El precio de venta es requerido.</small>
+                        </div>
+                    </div>
+                    
+                </ng-template>
+                <ng-template pTemplate="footer">
+                    <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+                    <button pButton pRipple label="Guardar" icon="pi pi-check" class="p-button-text" (click)="savePaquete()"></button>
+                </ng-template>
+            </p-dialog>
+    
+            <p-dialog [(visible)]="deletePaqueteDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+                <div class="flex align-items-center justify-content-center">
+                    <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                    <span *ngIf="PaqueteArray">¿Estas seguro que deseas eliminar <b>{{PaqueteArray.name}}</b>?</span>
+                </div>
+                <ng-template pTemplate="footer">
+                    <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No" (click)="deletePaqueteDialog = false"></button>
+                    <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes" (click)="confirmDelete()"></button>
+                </ng-template>
+            </p-dialog>
+    
+            <p-dialog [(visible)]="deletePaquetesDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+                <div class="flex align-items-center justify-content-center">
+                    <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                    <span>¿Estas seguro que deseas eliminar este servicio?</span>
+                </div>
+                <ng-template pTemplate="footer">
+                    <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No" (click)="deleteServiciosDialog = false"></button>
+                    <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes" (click)="confirmDeleteSelected()"></button>
+                </ng-template>
+            </p-dialog>
+        </div>
+    </div>
+</div>

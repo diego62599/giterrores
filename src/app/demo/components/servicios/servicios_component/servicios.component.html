@@ -1,0 +1,123 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card px-6 py-6">
+            <p-toolbar styleClass="mb-4">
+                <ng-template pTemplate="left">
+                    <div class="my-2">
+                        <button pButton pRipple label="Nuevo" icon="pi pi-plus" class="p-button-success mr-2" (click)="openNew()"></button>
+                        <button pButton pRipple label="Eliminar" icon="pi pi-trash" class="p-button-danger" (click)="deleteSelectedServicios()" [disabled]="!selectedProducts || !selectedProducts.length"></button>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="right">
+                    <button pButton pRipple label="Exportar" icon="pi pi-upload" class="p-button-help" (click)="dt.exportCSV()"></button>
+                </ng-template>
+            </p-toolbar>
+
+            <p-table #dt [columns]="cols" responsiveLayout="scroll" [rows]="10" [globalFilterFields]="['name','country.name','representative.name','status']" [paginator]="true" [rowsPerPageOptions]="[10,20,30]" [showCurrentPageReport]="true" currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" selectionMode="multiple" [rowHover]="true" dataKey="id">
+                <ng-template pTemplate="caption">
+                    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                        <h5 class="m-0">Tabla de Servicios</h5>
+                        <span class="block mt-2 md:mt-0 p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." class="w-full sm:w-auto" />
+                        </span>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 3rem">
+                            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                        </th>
+                        <th pSortableColumn="id">Id <p-sortIcon field="id"></p-sortIcon></th>
+                        <th pSortableColumn="servicio">Servicio <p-sortIcon field="servicio"></p-sortIcon></th>
+                        <th pSortableColumn="cantidad">Cantidad <p-sortIcon field="cantidad"></p-sortIcon></th>
+                        <th pSortableColumn="precio">Precio <p-sortIcon field="precio"></p-sortIcon></th>
+                        <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+                        <th></th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-ServicioArray>
+                    <tr *ngFor="let ServicioItem of ServicioArray">
+                        <td>
+                            <p-tableCheckbox [value]="ServicioArray"></p-tableCheckbox>
+                        </td>
+                        <td style="width:14%; min-width:10rem;"><span class="p-column-title">Id</span>{{ServicioArray.id}}</td>
+                        <td style="width:14%; min-width:10rem;"><span class="p-column-title">Servicio</span>{{ServicioArray.servicio}}</td>
+                        <td style="width:14%; min-width:10rem;"><span class="p-column-title">Cantidad</span>{{ServicioArray.cantidad}}</td>
+                        <td style="width:14%; min-width:8rem;"><span class="p-column-title">Precio</span>{{ServicioArray.precio | currency:'$'}}</td>
+                        <td style="width:14%; min-width: 10rem;"><span class="p-column-title">Estado</span><span [class]="'product-badge status-' + (ServicioArray.inventoryStatus ? ServicioArray.inventoryStatus.toLowerCase() : '')">{{ServicioArray.inventoryStatus}}</span></td>
+                        <td>
+                            <div class="flex">
+                                <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" (click)="editServicio(ServicioArray)"></button>
+                                <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-warning" (click)="deleteServicio(ServicioArray)"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+        <p-dialog [(visible)]="servicioDialog" [style]="{width: '450px'}" header="Detalle de los Servicios" [modal]="true" class="p-fluid">
+            <ng-template pTemplate="content">
+                <div class="field">
+                    <label for="servicio">Servicio<span style="color: red;">*</span></label>
+                    <input type="text" pInputText id="servicio" [(ngModel)]="ServicioArray.servicio" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !ServicioArray.servicio}" />
+                    <small class="ng-dirty ng-invalid" *ngIf="submitted && !ServicioArray.servicio">El servicio es requerido.</small>
+                </div>
+                <div class="field">
+                    <label for="inventoryStatus">Estado<span style="color: red;">*</span></label>
+                    <p-dropdown [(ngModel)]="ServicioArray.inventoryStatus" inputId="inventoryStatus" optionValue="value" [options]="statuses" placeholder="Select">
+                        <ng-template pTemplate="selectedItem">
+                            <span *ngIf="ServicioArray && ServicioArray.inventoryStatus" [class]="'product-badge status-' + ServicioArray.inventoryStatus.toString().toLowerCase()">{{ServicioArray.inventoryStatus}}</span>
+                        </ng-template>
+                        <ng-template let-option pTemplate="item">
+                            <span [class]="'product-badge status-' + option.value">{{option.label}}</span>
+                        </ng-template>
+                    </p-dropdown>
+                </div>
+
+                <div class="formgrid grid">
+                    <div class="field col">
+                        <label for="precio">Precio<span style="color: red;">*</span></label>
+                        <p-inputNumber id="precio" [(ngModel)]="ServicioArray.precio" mode="currency" currency="COP" locale="es-CO" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !ServicioArray.precio}" ></p-inputNumber>
+                        <small class="ng-dirty ng-invalid" *ngIf="submitted && !ServicioArray.precio">El precio es requerido.</small>
+                    </div>                    
+                    <div class="field col">
+                        <label for="cantidad">Cantidad<span style="color: red;">*</span></label>
+                        <p-inputNumber id="cantidad" [(ngModel)]="ServicioArray.cantidad" required autofocus [ngClass]="{'ng-invalid ng-dirty' : submitted && !ServicioArray.cantidad}" ></p-inputNumber>
+                        <small class="ng-dirty ng-invalid" *ngIf="submitted && !ServicioArray.cantidad">La cantidad requerido.</small>
+                    </div>
+                </div>
+                
+            </ng-template>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+                <button pButton pRipple label="Guardar" icon="pi pi-check" class="p-button-text" (click)="saveServicio()"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="deleteServicioDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+            <div class="flex align-items-center justify-content-center">
+                <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                <span *ngIf="ServicioArray">¿Estas seguro que deseas eliminar <b>{{ServicioArray.name}}</b>?</span>
+            </div>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No" (click)="deleteServicioDialog = false"></button>
+                <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes" (click)="confirmDelete()"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="deleteServiciosDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+            <div class="flex align-items-center justify-content-center">
+                <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                <span>¿Estas seguro que deseas eliminar este servicio?</span>
+            </div>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No" (click)="deleteServiciosDialog = false"></button>
+                <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes" (click)="confirmDeleteSelected()"></button>
+            </ng-template>
+        </p-dialog>
+    </div>
+</div>
